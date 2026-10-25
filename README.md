@@ -7,10 +7,6 @@
 > **English**: A self-hosted family ledger for Chinese "人情往来" (gift/reciprocity bookkeeping) and baby expenses.
 > Single Go binary + single SQLite file, frontend embedded, zero external dependencies.
 
-> **给别人看的版本**：[`项目说明书.html`](./项目说明书.html)（单文件，浏览器直接打开，含功能清单、数据模型、API、产品取舍与「还能加什么」）
->
-> **演进过程**：[`CHANGELOG.md`](./CHANGELOG.md) ｜ **后续计划**：[`ROADMAP.md`](./ROADMAP.md)
-
 ## 功能
 
 ### 洞察（普通记账软件没有的部分）
