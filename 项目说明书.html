@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>添丁记 · 项目说明书</title>
+<style>
+:root{
+  --bg:#0b0e14; --card:#141922; --card2:#1b222e; --line:#232b39;
+  --text:#e9edf5; --dim:#96a3b8; --dim2:#68748a;
+  --in:#ef5f4c; --out:#2bb98a; --warn:#f0ab3d; --acc:#6b8cff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(120% 60% at 50% 0%,#141b27,#0b0e14 55%) no-repeat;
+  color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+  font-size:15px;line-height:1.7;padding:0 0 80px}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px}
+header{padding:56px 0 32px;border-bottom:1px solid var(--line);margin-bottom:32px}
+h1{font-size:30px;margin:0 0 10px;letter-spacing:-.5px;font-weight:650}
+.sub{color:var(--dim);font-size:15px;margin:0}
+.meta{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px;font-size:13px;color:var(--dim2)}
+.meta b{color:var(--acc);font-weight:600}
+h2{font-size:20px;margin:44px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line);font-weight:600}
+h3{font-size:16px;margin:26px 0 10px;font-weight:600;color:var(--text)}
+p{margin:0 0 12px;color:var(--dim)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+th{text-align:left;padding:9px 10px;background:var(--card2);color:var(--dim);font-weight:500;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}
+td b{color:var(--text);font-weight:500}
+code{background:var(--card2);padding:2px 6px;border-radius:5px;font-size:12.5px;
+  font-family:ui-monospace,Consolas,monospace;color:#a9c0ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.kpi .n{font-size:26px;font-weight:650;color:var(--acc);line-height:1.2}
+.kpi .l{font-size:12px;color:var(--dim2);margin-top:4px}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;margin:2px 4px 2px 0}
+.t-done{background:rgba(43,185,138,.15);color:var(--out)}
+.t-idea{background:rgba(240,171,61,.15);color:var(--warn)}
+.t-no{background:rgba(239,95,76,.13);color:var(--in)}
+.t-new{background:rgba(107,140,255,.15);color:var(--acc)}
+ul{margin:8px 0;padding-left:20px;color:var(--dim)}
+li{margin-bottom:5px}
+li b{color:var(--text);font-weight:500}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:680px){.split{grid-template-columns:1fr}}
+.quote{border-left:3px solid var(--acc);padding:2px 0 2px 14px;color:var(--dim);margin:12px 0}
+.foot{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim2);font-size:12.5px}
+.num{color:var(--acc);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>添丁记（FamilyLedger）</h1>
+  <p class="sub">一个部署在自己 NAS 上的家庭账本 —— 记宝宝的每一分开销、收的每一个红包，以及那些早晚要还回去的人情。</p>
+  <div class="meta">
+    <span><b>4,779</b> 行代码</span>
+    <span><b>125</b> 项自动化测试全通过</span>
+    <span>Go 单二进制 <b>10.3MB</b></span>
+    <span>依赖 <b>仅 1 个</b>（SQLite 驱动）</span>
+    <span>更新于 <b>2026-09-25</b></span>
+  </div>
+</header>
+
+<h2>一、它解决什么</h2>
+<p>家里有了宝宝之后，钱和人情的流动会突然变复杂：一边是奶粉尿不湿的持续开销，一边是满月、周岁收的一堆红包，还有那些「当初给了多少、现在该回多少」的人情账。</p>
+<div class="split">
+  <div class="card">
+    <h3 style="margin-top:0">普通记账 App 的问题</h3>
+    <p style="margin:0">它把红包记成一笔「收入」。但红包不是收入，是<b style="color:var(--in)">负债</b> —— 早晚要还，而且得记住还给了谁、还了多少。</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">这个 App 的核心差异</h3>
+    <p style="margin:0">按<b style="color:var(--warn)">人</b>而不是按分类记账。每个人自动算出「收了多少、送了多少、还差多少」，直接给出待回礼清单。</p>
+  </div>
+</div>
+
+<h2>二、数据是怎么组织的</h2>
+<p>八个表，全部在一个 SQLite 文件里（目前实测不到 2MB）。金额一律用<b>整数分</b>存储，绝不碰浮点数。</p>
+<table>
+  <tr><th style="width:130px">表</th><th>作用</th><th style="width:38%">关键字段</th></tr>
+  <tr><td><b>member</b></td><td>家庭成员（爸爸/妈妈/姥姥…）</td><td>id, nickname</td></tr>
+  <tr><td><b>person</b></td><td>往来对象</td><td>name, relation（亲戚/同事/同学/朋友/邻居）, py</td></tr>
+  <tr><td><b>gift_event</b></td><td>事由</td><td>name（满月酒/周岁宴/婚礼/春节红包…）</td></tr>
+  <tr><td><b>gift_record</b></td><td><b>人情流水</b></td><td>person_id, direction(<code>in</code>收/<code>out</code>送), amount_cents, occurred_on, settle</td></tr>
+  <tr><td><b>baby_expense</b></td><td>宝宝开销</td><td>category, amount_cents, qty, unit, merchant</td></tr>
+  <tr><td><b>milestone</b></td><td>成长节点</td><td>kind, title, occurred_on</td></tr>
+  <tr><td><b>app_token</b></td><td>登录令牌</td><td>token, member_id, expires_at</td></tr>
+  <tr><td><b>profile</b></td><td>配置</td><td>baby_name, baby_birthday</td></tr>
+</table>
+<div class="quote">
+  三个核心问题都有直连查询：<br>
+  ① 王姨当初给了多少 → 按人查流水<br>
+  ② 我还欠谁 → <code>net = 收 - 送 &gt; 0</code> 的人<br>
+  ③ 人情总收支 → 全表聚合
+</div>
+
+<h2>三、已实现的功能</h2>
+
+<h3>人情账本</h3>
+<ul>
+  <li><b>收/送礼记录</b> —— 方向、金额、日期、事由、方式、备注</li>
+  <li><b>按人自动算差额</b> —— 选中人即显示「收多少 / 送多少 / 还欠多少」</li>
+  <li><b>待回礼清单</b> —— 按紧迫度排序（金额 × 拖的天数加权），拖过一年的标红</li>
+  <li><b>历史金额参考</b> —— 点一下就能填上次给的数目，避免回礼时随太少尴尬</li>
+  <li><b>回礼标记</b> —— 可把某笔标为「无需回礼」（比如长辈压岁钱）</li>
+  <li><b>批量录礼单</b> <span class="tag t-new">新</span> —— 粘一长串「名字 金额」，一次录几十笔，实时预览条数与合计</li>
+</ul>
+
+<h3>添丁记</h3>
+<ul>
+  <li><b>12 类分类开销</b> —— 奶粉/尿不湿/医疗/服饰/辅食/玩具/早教/出行/洗护/纸巾/摄影/其他</li>
+  <li><b>数量与单位</b> —— 买 3 罐奶粉记成「3 罐」，是补货预测的基础</li>
+  <li><b>环形图 + 近半年走势</b> —— 钱花在哪、有没有越来越贵</li>
+</ul>
+
+<h3>洞察（普通记账软件没有的部分）</h3>
+<ul>
+  <li><b>消耗品补货预警</b> —— 按相邻两次购买反推日均消耗，算出「奶粉约 10 天后见底」</li>
+  <li><b>人情紧迫度</b> —— 按「最后一次<b>收到</b>对方礼金」起算，而不是最后一次往来（昨天刚回过礼 ≠ 两年前收了没还）</li>
+  <li><b>久未往来提醒</b> —— 超过两年没走动的关系主动提示</li>
+  <li><b>养育成本预测</b> —— 按近三个月花销推算一年开销，设了生日后能推到 3 岁</li>
+  <li><b>成长时间线</b> —— 花销、收送礼、里程碑揉在同一条轴上</li>
+</ul>
+
+<h3>记录管理 <span class="tag t-new">新</span></h3>
+<ul>
+  <li><b>编辑任意记录</b> —— 金额/方向/日期/事由/备注都能改，不用删了重记</li>
+  <li><b>筛选</b> —— 按关系、方向、金额区间、关键词（姓名/事由/备注）</li>
+  <li><b>区间切换</b> —— 本周/本月/本季/本年/全部，每项带<b>环比对比</b></li>
+  <li><b>日历热力图</b> —— 近 5 周按天着色，一眼看出哪天花得多</li>
+  <li><b>往来 Top</b> —— 本期往来金额最高的人</li>
+  <li><b>完整备份/恢复</b> —— 导出 JSON，换机器导入即可（同名人和事由自动合并）</li>
+</ul>
+
+<h3>基础能力</h3>
+<ul>
+  <li><b>多成员协作</b> —— 全家一个 6 位口令进入，各选身份，每笔记住谁录的</li>
+  <li><b>PWA</b> —— 手机「添加到主屏幕」全屏运行，安卓 / iPhone 都支持，底部导航</li>
+  <li><b>离线录入</b> —— 断网写入本地队列，恢复后自动同步</li>
+  <li><b>CSV 导出</b> —— 两本账分别导出，UTF-8 BOM，Excel 直接打开不乱码</li>
+  <li><b>每日自动备份</b> —— 凌晨 3 点不停服一致性快照，保留 30 份</li>
+</ul>
+
+<h2>四、技术架构</h2>
+<div class="card">
+  <table style="margin:0">
+    <tr><th style="width:130px">层</th><th>选择</th><th>为什么</th></tr>
+    <tr><td><b>语言</b></td><td>Go 1.27（纯标准库路由）</td><td>交叉编译一条命令出 amd64/arm64；静态链接无依赖</td></tr>
+    <tr><td><b>数据库</b></td><td>SQLite（modernc.org/sqlite，无 cgo）</td><td><b>单文件</b> —— 换机器就是拷一个文件，数据一行都不用重录</td></tr>
+    <tr><td><b>前端</b></td><td>原生 JS + HTML/CSS，无框架无构建</td><td>首屏 &lt;50KB，PWA 缓存后 2Mbps 带宽也能秒开</td></tr>
+    <tr><td><b>资源</b></td><td><code>embed.FS</code> 把前端打进二进制</td><td>部署产物是<b>一个文件</b>，不需要 nginx、不需要挂静态目录</td></tr>
+    <tr><td><b>图表</b></td><td>手写 Canvas + CSS</td><td>不引入 Chart.js 之类的体积</td></tr>
+  </table>
+</div>
+<div class="grid">
+  <div class="kpi"><div class="n">10.3 MB</div><div class="l">Linux amd64 二进制</div></div>
+  <div class="kpi"><div class="n">~25 MB</div><div class="l">运行时内存占用</div></div>
+  <div class="kpi"><div class="n">1 个</div><div class="l">第三方依赖（SQLite 驱动）</div></div>
+  <div class="kpi"><div class="n">125 项</div><div class="l">自动化测试，全部通过</div></div>
+</div>
+
+<h2>五、API 一览</h2>
+<p>后端是标准 REST + JSON，前端完全通过它取数 —— 想做桌面端、小程序或接 Home Assistant，都可以直接复用。</p>
+<table>
+  <tr><th style="width:220px">接口</th><th>用途</th></tr>
+  <tr><td><code>POST /api/login</code> · <code>/api/session</code></td><td>家庭口令登录、选身份</td></tr>
+  <tr><td><code>GET /api/insights</code></td><td>首页全部洞察（本月花销、告警、补货、预测）</td></tr>
+  <tr><td><code>GET /api/timeline</code></td><td>花销 + 往来 + 里程碑混合时间线</td></tr>
+  <tr><td><code>GET /api/stats?range=</code></td><td>区间统计（week/month/quarter/year/all）+ 环比</td></tr>
+  <tr><td><code>GET /api/consumables</code></td><td>消耗品补货预测</td></tr>
+  <tr><td><code>GET /api/owes</code></td><td>待回礼清单</td></tr>
+  <tr><td><code>GET|POST|PATCH|DELETE /api/gifts</code></td><td>人情往来增删改查（PATCH 支持改金额/方向/日期/事由）</td></tr>
+  <tr><td><code>POST /api/gifts/batch</code></td><td>批量录礼单</td></tr>
+  <tr><td><code>GET|POST|PATCH|DELETE /api/baby</code></td><td>宝宝开销</td></tr>
+  <tr><td><code>GET|POST|DELETE /api/milestones</code></td><td>成长里程碑</td></tr>
+  <tr><td><code>GET /api/export.csv</code></td><td>导出 Excel（两本账）</td></tr>
+  <tr><td><code>GET /api/backup.json</code> · <code>POST /api/restore</code></td><td>完整备份与恢复</td></tr>
+</table>
+
+<h2>六、怎么部署</h2>
+<p>目标是<b>全程不碰命令行</b>。用户在飞牛 NAS 的图形界面里：</p>
+<div class="card">
+  <p style="margin:0 0 8px"><b>1.</b> 建目录 <code>/vol1/docker/familyledger/</code>（下面建 data、backup 两个空文件夹）</p>
+  <p style="margin:0 0 8px"><b>2.</b> Docker → Compose → 新增项目 → 粘贴 <code>docker-compose.yml</code> → 勾选「创建后立即启动」</p>
+  <p style="margin:0 0 8px"><b>3.</b> 局域网打开 <code>http://NAS内网IP:8080</code> 验证</p>
+  <p style="margin:0"><b>4.</b> 开启飞牛官方内网穿透 FN Connect，手机断 WiFi 用流量实测</p>
+</div>
+<p><b>退路：</b>万一飞牛的穿透不给透自定义端口，把那一个二进制 + 一个 .db 文件拷到 99 元/年的云服务器上继续跑，数据一行不丢 —— 这是选 SQLite 单文件的最大价值。</p>
+
+<h2>七、变更日志</h2>
+<table>
+  <tr><th style="width:80px">轮次</th><th>内容</th></tr>
+  <tr><td><b>第一版</b></td><td>项目骨架、SQLite 建表、人情闭环、添丁记、家庭口令、PWA、离线队列、CSV 导出、每日备份</td></tr>
+  <tr><td><b>第二轮</b></td><td>用户反馈「太简陋」→ 新增洞察引擎（补货预测/紧迫度/久未往来/成本预测/成长时间线）、UI 从 2 个输入框改造成 4 页底部导航、Canvas 环形图</td></tr>
+  <tr><td><b>第三轮</b></td><td>用户要求「对标谷哩的完整度」→ 补记录管理能力：编辑、批量录礼单、筛选、区间切换+环比、日历热力图、往来 Top、回礼标记、JSON 备份恢复</td></tr>
+</table>
+
+<h2>八、还没做 —— 可以加什么</h2>
+<p>下面是我自己识别出的方向，供讨论。<span class="tag t-idea">候选</span> 表示我认为值得做，<span class="tag t-no">暂缓</span> 表示我判断会拖累核心体验。</p>
+
+<h3>内容维度</h3>
+<ul>
+  <li><span class="tag t-idea">候选</span> <b>照片凭证</b> —— 红包封面、小票、宝宝照片。现在是纯文字，很多场景靠文字说不清</li>
+  <li><span class="tag t-idea">候选</span> <b>多宝宝</b> —— 目前数据模型隐含「一个宝宝」，二胎需要加一层维度</li>
+  <li><span class="tag t-idea">候选</span> <b>语音/对话记账</b> —— 「昨天给王姨随了 600」，说完就记完</li>
+  <li><span class="tag t-no">暂缓</span> 预算管理与超支提醒 —— 会增加录入负担，与「3 秒记一笔」冲突</li>
+</ul>
+
+<h3>人情维度（这块是这个 App 的护城河）</h3>
+<ul>
+  <li><span class="tag t-idea">候选</span> <b>回礼金额建议</b> —— 综合对方给了多少、当前行情、当地习惯，给出建议数字</li>
+  <li><span class="tag t-idea">候选</span> <b>关系网络</b> —— 谁和谁出现在同一场酒席，找出「中间人」</li>
+  <li><span class="tag t-idea">候选</span> <b>礼单打印</b> —— 办完酒席输出一份正式可打印的礼单</li>
+  <li><span class="tag t-idea">候选</span> <b>人情到期提醒</b> —— 收到礼金后 N 天推送一次提醒（需要浏览器通知权限）</li>
+  <li><span class="tag t-no">暂缓</span> 多币种 —— 家庭场景基本用不上</li>
+</ul>
+
+<h3>呈现与协作</h3>
+<ul>
+  <li><span class="tag t-idea">候选</span> <b>年度账单卡片</b> —— 生成一张可发朋友圈的年度总结图</li>
+  <li><span class="tag t-idea">候选</span> <b>家庭动态</b> —— 谁记了一笔，其他人能看到（类似朋友圈的轻量版）</li>
+  <li><span class="tag t-idea">候选</span> <b>从其他 App 导入</b> —— 支持随手记/挖财的 CSV 格式</li>
+  <li><span class="tag t-no">暂缓</span> 小程序 —— 需要备案域名和额外开发，PWA 已够用</li>
+</ul>
+
+<h3>工程</h3>
+<ul>
+  <li><span class="tag t-idea">候选</span> <b>访问日志</b> —— 谁在什么时候改了哪条记录，家庭账本也需要可追溯</li>
+  <li><span class="tag t-idea">候选</span> <b>数据库加密</b> —— 金额敏感，可考虑 SQLCipher</li>
+  <li><span class="tag t-idea">候选</span> <b>WebDAV 异地备份</b> —— 备份不只落在 NAS 本地，定期推一份到网盘</li>
+</ul>
+
+<div class="quote">
+  <b>我的取舍原则：</b>任何增加「录入摩擦」的功能都要谨慎。记账工具失败的典型姿势不是功能不够，而是第二周就没人愿意打开它。<br>
+  所以上面标「暂缓」的，多半不是做不了，是做了会伤害核心体验。
+</div>
+
+<h2>九、怎么参与</h2>
+<div class="card">
+  <p style="margin:0 0 8px"><b>看代码：</b><code>familyledger/</code> 目录下，<code>store.go</code> 是全部 SQL，<code>api.go</code> 是全部接口，<code>insight.go</code> 是洞察算法，<code>web/</code> 是前端。</p>
+  <p style="margin:0 0 8px"><b>改代码：</b>改完 <code>go build</code> 出一个新二进制即可，前端已内嵌，不用打包。</p>
+  <p style="margin:0"><b>提功能：</b>建议对照第八节，说明它解决的是「录入」「查看」还是「决策」哪一类问题，以及愿意为此多几次点击。</p>
+</div>
+
+<div class="foot">
+  添丁记 · 2026-09-25 · 代码 4,779 行 · 125 项测试通过 · 数据全部存在自有机器的单个文件里
+</div>
+
+</div>
+</body>
+</html>
